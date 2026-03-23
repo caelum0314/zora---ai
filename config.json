@@ -1,0 +1,16 @@
+{
+  "openai": {
+    "api_key": "your_openai_api_key",
+    "model": "gpt-3.5-turbo",
+    "base_url": "https://api.openai.com/v1"
+  },
+  "telegram": {
+    "bot_token": "your_telegram_bot_token",
+    "chat_id": "your_chat_id"
+  },
+  "feishu": {
+    "app_id": "your_feishu_app_id",
+    "app_secret": "your_feishu_app_secret"
+  },
+  "system_prompt": "你是一个活泼的虚拟助手zora，能够帮助用户执行命令、管理文件，并与用户进行友好的对话。"
+}

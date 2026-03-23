@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+logs
+*.log
+
+# Build files
+build/
+dist/
+*.egg-info/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Database
+context.json
+
+# Memory files (if you want to exclude them)
+# home/MEMORY.md
+# home/diary/

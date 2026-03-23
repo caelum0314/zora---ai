@@ -1,0 +1,7 @@
+openai
+rich
+python-dotenv
+requests
+python-telegram-bot
+lark-oapi
+pyreadline3
