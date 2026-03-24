@@ -1,5 +1,7 @@
 import json
 import os
+import threading
+import time
 from rich.console import Console
 from rich.markdown import Markdown
 from lib.core import Core
@@ -24,6 +26,12 @@ class Main:
         if config['telegram']['bot_token'] and config['telegram']['chat_id']:
             self.telegram = Telegram(config['telegram']['bot_token'], config['telegram']['chat_id'])
         
+        self.running = True
+        
+        # 启动消息检查线程
+        self.message_thread = threading.Thread(target=self.check_messages, daemon=True)
+        self.message_thread.start()
+        
         self._show_welcome()
     
     def _show_welcome(self):
@@ -47,6 +55,64 @@ class Main:
         self.console.print("  telegram <消息> - 发送消息到Telegram")
         self.console.print("  exit - 退出程序\n")
     
+    def check_messages(self):
+        while self.running:
+            # 检查飞书消息
+            if self.feishu:
+                try:
+                    chat_id = self.core.config['feishu'].get('chat_id', '')
+                    if chat_id:
+                        messages = self.feishu.get_messages(chat_id, limit=5)
+                        if isinstance(messages, list):
+                            for msg in messages:
+                                content = msg.get('content', '{}')
+                                try:
+                                    content_json = json.loads(content)
+                                    text = content_json.get('text', '').strip()
+                                    if text.startswith('command:'):
+                                        command = text[8:].strip()
+                                        self.console.print(f"从飞书收到命令: {command}", style="cyan")
+                                        result = self.core.execute_command(command)
+                                        self.console.print(f"命令执行结果: {result}", style="blue")
+                                        self.feishu.send_message(chat_id, f"命令执行结果:\n{result}")
+                                    elif text.startswith('ai:'):
+                                        question = text[3:].strip()
+                                        self.console.print(f"从飞书收到AI问题: {question}", style="cyan")
+                                        response = self.core.get_chat_response(question)
+                                        self.console.print(f"AI回答: {response}", style="green")
+                                        self.feishu.send_message(chat_id, f"AI回答:\n{response}")
+                                except json.JSONDecodeError:
+                                    pass
+                except Exception as e:
+                    self.console.print(f"检查飞书消息时出错: {str(e)}", style="red")
+            
+            # 检查Telegram消息
+            if self.telegram:
+                try:
+                    updates = self.telegram.get_messages()
+                    if isinstance(updates, list):
+                        for update in updates:
+                            message = update.get('message', {})
+                            text = message.get('text', '').strip()
+                            chat_id = message.get('chat', {}).get('id', self.telegram.chat_id)
+                            if text.startswith('command:'):
+                                command = text[8:].strip()
+                                self.console.print(f"从Telegram收到命令: {command}", style="cyan")
+                                result = self.core.execute_command(command)
+                                self.console.print(f"命令执行结果: {result}", style="blue")
+                                self.telegram.send_message(f"命令执行结果:\n{result}")
+                            elif text.startswith('ai:'):
+                                question = text[3:].strip()
+                                self.console.print(f"从Telegram收到AI问题: {question}", style="cyan")
+                                response = self.core.get_chat_response(question)
+                                self.console.print(f"AI回答: {response}", style="green")
+                                self.telegram.send_message(f"AI回答:\n{response}")
+                except Exception as e:
+                    self.console.print(f"检查Telegram消息时出错: {str(e)}", style="red")
+            
+            # 等待一段时间后再次检查
+            time.sleep(5)
+    
     def run(self):
         while True:
             try:
@@ -55,6 +121,7 @@ class Main:
                     continue
                 
                 if user_input == "exit":
+                    self.running = False
                     self.console.print("再见！", style="green")
                     break
                 elif user_input == "summary":
@@ -93,6 +160,7 @@ class Main:
                     else:
                         self.console.print(Markdown(response), style="green")
             except KeyboardInterrupt:
+                self.running = False
                 self.console.print("\n再见！", style="green")
                 break
             except Exception as e:

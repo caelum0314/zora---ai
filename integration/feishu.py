@@ -44,3 +44,24 @@ class Feishu:
             return "Message sent successfully"
         else:
             return f"Failed to send message: {result.get('msg')}"
+    
+    def get_messages(self, chat_id, limit=10):
+        if not self.access_token:
+            self.get_access_token()
+        
+        url = f"{self.base_url}/im/v1/messages"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.access_token}"
+        }
+        params = {
+            "chat_id": chat_id,
+            "limit": limit,
+            "reverse": False
+        }
+        response = requests.get(url, headers=headers, params=params)
+        result = response.json()
+        if result.get("code") == 0:
+            return result.get("data", {}).get("items", [])
+        else:
+            return f"Failed to get messages: {result.get('msg')}"
