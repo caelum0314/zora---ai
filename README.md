@@ -1,6 +1,6 @@
 # Zora
 
-将大语言模型与系统命令执行能力结合，让活泼的虚拟少女 pomi 成为你终端里的贴心助手，帮你对话、执行命令、管理文件，还能连接飞书和Telegram等手机软件。
+将大语言模型与系统命令执行能力结合，让活泼的 zora 成为你终端里的贴心助手，帮你对话、执行命令、管理文件，还能连接飞书和Telegram等手机软件。
 
 ## ✨ 功能特点
 
@@ -30,12 +30,10 @@
    git clone https://github.com/caelum0314/zora---ai.git
    cd zora---ai
    ```
-
 2. 安装依赖：
    ```bash
    pip install -r requirements.txt
    ```
-
 3. 配置API密钥：
    编辑 `config.json` 文件，填写你的 API 密钥和其他配置信息：
    ```json
@@ -60,6 +58,7 @@
 ## 🚀 使用方法
 
 在项目目录下运行主程序：
+
 ```bash
 python main.py
 ```
@@ -70,14 +69,14 @@ python main.py
 
 在输入框（>>）中可直接输入以下命令：
 
-| 命令 | 作用 |
-|------|------|
-| summary | 压缩当前上下文，保留重要信息（调用 AI 总结） |
-| clear | 清空所有上下文历史 |
-| command <命令> | 手动执行Shell命令 |
-| feishu <消息> | 发送消息到飞书 |
-| telegram <消息> | 发送消息到Telegram |
-| exit | 退出程序 |
+| 命令            | 作用                       |
+| ------------- | ------------------------ |
+| summary       | 压缩当前上下文，保留重要信息（调用 AI 总结） |
+| clear         | 清空所有上下文历史                |
+| command <命令>  | 手动执行Shell命令              |
+| feishu <消息>   | 发送消息到飞书                  |
+| telegram <消息> | 发送消息到Telegram            |
+| exit          | 退出程序                     |
 
 ### 示例
 
@@ -86,7 +85,6 @@ python main.py
    >> 你好，pomi
    你好！我是你的AI助手pomi，有什么可以帮你的吗？
    ```
-
 2. **执行命令**：
    ```
    >> command ls -la
@@ -102,13 +100,11 @@ python main.py
    drwxr-xr-x  2 user  staff    64 Mar 23 19:47 database
    drwxr-xr-x  3 user  staff    96 Mar 23 19:47 integration
    ```
-
 3. **发送消息到飞书**：
    ```
    >> feishu 测试消息
    Message sent successfully
    ```
-
 4. **发送消息到Telegram**：
    ```
    >> telegram 测试消息
