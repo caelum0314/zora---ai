@@ -334,8 +334,9 @@
                 <li class="feature-item">工作目录保持：AI 执行的命令会在当前工作目录下运行，支持 cd 命令</li>
                 <li class="feature-item">记忆机制：AI 拥有专属的 MEMORY.md 文件，可写入重要信息</li>
                 <li class="feature-item">技能扩展：通过配置文件可自定义可调用的外部命令列表</li>
-                <li class="feature-item">飞书集成：支持通过命令发送消息到飞书</li>
-                <li class="feature-item">Telegram集成：支持通过命令发送消息到Telegram</li>
+                <li class="feature-item">飞书集成：支持通过命令发送消息到飞书，以及从飞书接收命令并执行</li>
+                <li class="feature-item">Telegram集成：支持通过命令发送消息到Telegram，以及从Telegram接收命令并执行</li>
+                <li class="feature-item">远程控制：通过飞书或Telegram远程控制电脑执行命令，实现类似OpenClaw的功能</li>
             </ul>
         </div>
         
@@ -373,10 +374,33 @@
                         },
                         "feishu": {
                             "app_id": "your_feishu_app_id",
-                            "app_secret": "your_feishu_app_secret"
-                        }
+                            "app_secret": "your_feishu_app_secret",
+                            "chat_id": "your_feishu_chat_id"
+                        },
+                        "system_prompt": "你是Zora，一个活泼可爱的AI助手，住在用户的终端里，帮助用户执行命令、管理文件、回答问题。"
                     }
                 </div>
+            </div>
+            
+            <div class="install-step">
+                <strong>4. 配置飞书和Telegram（可选）：</strong>
+                <p><strong>飞书配置：</strong></p>
+                <ol>
+                    <li>登录飞书开发者平台：<a href="https://open.feishu.cn/" target="_blank">https://open.feishu.cn/</a></li>
+                    <li>创建一个企业自建应用</li>
+                    <li>在"凭证与基础信息"中获取App ID和App Secret</li>
+                    <li>在"权限管理"中添加"im:message:send"和"im:message:read"权限</li>
+                    <li>在"事件订阅"中配置消息接收事件</li>
+                    <li>在config.json中填写app_id、app_secret和chat_id（群聊或用户的chat_id）</li>
+                </ol>
+                <p><strong>Telegram配置：</strong></p>
+                <ol>
+                    <li>在Telegram中搜索"@BotFather"</li>
+                    <li>发送"/newbot"命令创建一个新机器人</li>
+                    <li>获取机器人的token</li>
+                    <li>与机器人聊天，然后访问 <code>https://api.telegram.org/bot&lt;token&gt;/getUpdates</code> 获取chat_id</li>
+                    <li>在config.json中填写bot_token和chat_id</li>
+                </ol>
             </div>
         </div>
         
@@ -418,6 +442,22 @@
                     <td>退出程序</td>
                 </tr>
             </table>
+            
+            <h3>远程控制功能</h3>
+            <p>Zora支持通过飞书和Telegram远程控制电脑执行命令，实现类似OpenClaw的功能。</p>
+            
+            <h4>使用方法：</h4>
+            <ol>
+                <li>确保飞书或Telegram已正确配置（参考安装步骤4）</li>
+                <li>运行Zora主程序：<code>python main.py</code></li>
+                <li>在飞书或Telegram中发送命令：</li>
+            </ol>
+            
+            <h4>支持的远程命令格式：</h4>
+            <ul>
+                <li><strong>执行系统命令：</strong> <code>command: &lt;命令&gt;</code>，例如 <code>command: ls -la</code></li>
+                <li><strong>AI对话：</strong> <code>ai: &lt;问题&gt;</code>，例如 <code>ai: 什么是机器学习？</code></li>
+            </ul>
         </div>
         
         <div class="section">
@@ -464,6 +504,39 @@
                     Message sent successfully
                 </div>
             </div>
+            
+            <div class="example">
+                <h3>5. 远程控制 - 从飞书执行命令</h3>
+                <div class="code-block">
+                    在飞书中发送：<br>
+                    command: ls -la<br>
+                    <br>
+                    飞书收到回复：<br>
+                    命令执行结果:
+                    total 40
+                    drwxr-xr-x  7 user  staff   224 Mar 23 19:47 .
+                    drwxr-xr-x  5 user  staff   160 Mar 23 19:45 ..
+                    -rw-r--r--  1 user  staff   200 Mar 23 19:47 config.json
+                    -rw-r--r--  1 user  staff   150 Mar 23 19:47 requirements.txt
+                    drwxr-xr-x  3 user  staff    96 Mar 23 19:47 lib
+                    drwxr-xr-x  3 user  staff    96 Mar 23 19:47 skill
+                    drwxr-xr-x  3 user  staff    96 Mar 23 19:47 home
+                    drwxr-xr-x  2 user  staff    64 Mar 23 19:47 database
+                    drwxr-xr-x  3 user  staff    96 Mar 23 19:47 integration
+                </div>
+            </div>
+            
+            <div class="example">
+                <h3>6. 远程控制 - 从Telegram执行命令</h3>
+                <div class="code-block">
+                    在Telegram中发送：<br>
+                    ai: 什么是机器学习？<br>
+                    <br>
+                    Telegram收到回复：<br>
+                    AI回答:
+                    机器学习是人工智能的一个分支，它使计算机系统能够从数据中学习并改进性能，而无需被显式编程。机器学习算法通过分析大量数据来识别模式，然后使用这些模式来做出预测或决策。
+                </div>
+            </div>
         </div>
         
         <div class="section">
@@ -479,6 +552,20 @@
             <div class="note">
                 <strong>Q: 如何修改AI助手的名字？</strong><br>
                 A: 编辑config.json文件中的system_prompt字段，将名字改为你喜欢的名称。
+            </div>
+            <div class="note">
+                <strong>Q: 为什么远程控制功能不工作？</strong><br>
+                A: 请检查以下几点：<br>
+                1. 飞书或Telegram的API密钥和参数是否正确配置<br>
+                2. 网络连接是否正常<br>
+                3. 飞书或Telegram的权限是否正确设置<br>
+                4. Zora程序是否正在运行
+            </div>
+            <div class="note">
+                <strong>Q: 远程控制支持哪些命令？</strong><br>
+                A: 远程控制支持执行系统命令和AI对话：<br>
+                1. 执行系统命令：发送 <code>command: &lt;命令&gt;</code><br>
+                2. AI对话：发送 <code>ai: &lt;问题&gt;</code>
             </div>
         </div>
         
