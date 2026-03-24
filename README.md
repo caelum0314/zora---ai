@@ -27,8 +27,8 @@
 
 1. 克隆仓库或下载源码：
    ```bash
-   git clone https://github.com/yourname/ninoclaw.git
-   cd ninoclaw
+   git clone https://github.com/caelum0314/zora---ai.git
+   cd zora---ai
    ```
 
 2. 安装依赖：
@@ -162,4 +162,4 @@ python main.py
 
 本项目采用 GPL-3.0 许可证。详见 LICENSE 文件。
 
-NinoClaw —— 让 AI 住在你的终端里，成为你的贴心小助手！🎉
+Zora —— 让 AI 住在你的终端里，成为你的贴心小助手！🎉
