@@ -38,7 +38,7 @@ class Main:
                                                               
 """
         self.console.print(welcome_art, style="cyan")
-        self.console.print("欢迎使用 NinoClaw AI 助手！\n", style="green")
+        self.console.print("欢迎使用 Zora AI 助手！\n", style="green")
         self.console.print("可用命令:")
         self.console.print("  summary - 压缩当前上下文")
         self.console.print("  clear - 清空所有上下文历史")
