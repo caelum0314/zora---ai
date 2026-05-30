@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zora AI 更新日志</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            padding: 15px 30px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 0 0 20px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .navbar h1 {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            margin: 30px;
+            padding: 40px;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            color: white;
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            font-size: 1.8rem;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        h3 {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 25px 0 15px;
+            font-size: 1.3rem;
+        }
+
+        p {
+            margin-bottom: 15px;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .version-tag {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .date {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        .update-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .update-section h3 {
+            margin-top: 0;
+            color: white;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 10px 0;
+            padding-left: 25px;
+            position: relative;
+            color: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        li:last-child {
+            border-bottom: none;
+        }
+
+        li:before {
+            content: "•";
+            color: #27ae60;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .highlight {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            color: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+
+        .badge-new {
+            background: rgba(46, 204, 113, 0.3);
+            color: #2ecc71;
+        }
+
+        .badge-updated {
+            background: rgba(52, 152, 219, 0.3);
+            color: #3498db;
+        }
+
+        .badge-security {
+            background: rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 30px;
+            text-align: center;
+            margin-top: 50px;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .footer p {
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 15px;
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Zora AI 更新日志</h1>
+    </nav>
+
+    <div class="container">
+        <a href="index.html" class="back-link">← 返回教程页面</a>
+
+        <h1>更新日志</h1>
+
+        <div class="version-tag">v2.0.0</div>
+        <p class="date">2026年5月30日</p>
+
+        <div class="update-section">
+            <h3>项目介绍更新 <span class="badge badge-updated">更新</span></h3>
+            <ul>
+                <li>重新定义 Zora 为"住在终端里的 AI 编程伙伴"</li>
+                <li>突出 AI 自动调用 12 个编程技能的特点</li>
+                <li>优化项目描述，强调智能对话和自动化编程能力</li>
+            </ul>
+        </div>
+
+        <div class="update-section">
+            <h3>功能列表重构 <span class="badge badge-updated">更新</span></h3>
+            <ul>
+                <li>按技能分类重新组织功能展示</li>
+                <li>新增 <span class="highlight">代码结构分析</span> 技能说明</li>
+                <li>更新远程交互功能，支持飞书和 Telegram</li>
+                <li>添加安全保护机制说明（危险命令拦截）</li>
+                <li>更新上下文管理功能（自动压缩、长期记忆）</li>
+            </ul>
+        </div>
+
+        <div class="update-section">
+            <h3>12 个编程技能 <span class="badge badge-new">新增</span></h3>
+            <ul>
+                <li><span class="code">code_search</span> - 正则搜索代码，支持文件过滤</li>
+                <li><span class="code">code_scan</span> - 扫描类/函数/导入/TODO</li>
+                <li><span class="code">file_read</span> - 带行号读文件，支持分段读取</li>
+                <li><span class="code">write_file</span> - 写入/创建文件，支持追加模式</li>
+                <li><span class="code">find_replace</span> - 跨文件批量替换，默认 dry-run</li>
+                <li><span class="code">edit</span> - 打开系统默认编辑器</li>
+                <li><span class="code">git_ops</span> - Git 状态/差异/日志/分支</li>
+                <li><span class="code">diff_review</span> - 差异摘要和文件级统计</li>
+                <li><span class="code">run_test</span> - 运行测试，只展示失败用例</li>
+                <li><span class="code">diagnose</span> - 错误诊断和上下文分析</li>
+                <li><span class="code">pip_ops</span> - 包管理操作</li>
+                <li><span class="code">web</span> - DuckDuckGo 即时搜索</li>
+            </ul>
+        </div>
+
+        <div class="update-section">
+            <h3>使用示例更新 <span class="badge badge-updated">更新</span></h3>
+            <ul>
+                <li>添加代码结构分析示例</li>
+                <li>更新远程控制示例，支持飞书和 Telegram</li>
+                <li>优化错误诊断和修复示例</li>
+                <li>添加完整的代码搜索、分析、修改工作流</li>
+            </ul>
+        </div>
+
+        <div class="update-section">
+            <h3>安全改进 <span class="badge badge-security">安全</span></h3>
+            <ul>
+                <li>移除真实 API key，替换为占位符</li>
+                <li>更新配置文件为示例格式</li>
+                <li>确保开源版本不包含敏感信息</li>
+            </ul>
+        </div>
+
+        <div class="update-section">
+            <h3>开源准备 <span class="badge badge-new">新增</span></h3>
+            <ul>
+                <li>创建开源版本的配置文件</li>
+                <li>添加安装脚本和启动脚本</li>
+                <li>更新 README.md 为开源格式</li>
+                <li>推送到 GitHub 仓库</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2026 Zora AI 助手 | 更新日志</p>
+    </footer>
+</body>
+</html>
