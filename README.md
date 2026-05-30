@@ -1,26 +1,39 @@
 # Zora — 终端 AI 编程助手
 
-将大语言模型与系统命令执行能力结合，Zora 是一个活泼的终端 AI 助手。她能**聊天、执行 Shell、搜索代码、分析结构、操作 Git、批量重构、运行测试、诊断错误、管理依赖包**——像一个真正的结对编程伙伴。支持飞书和 Telegram 远程交互。
+**Zora** 是一个住在终端里的 AI 编程伙伴。她将大语言模型与系统命令执行能力结合，能够理解你的意图并自动调用 12 个编程技能完成任务。
 
-## 功能矩阵
+## 核心特性
 
-| 类别 | 能力 |
+**智能对话**
+- 流式输出 + Markdown 渲染 + 自动重试（3次）
+- 上下文自动压缩（超 30 条触发 summary）
+- 对话历史持久化 + MEMORY.md 长期记忆
+- `export` 命令导出对话为 Markdown
+
+**编程技能（AI 自动调用）**
+
+| 技能 | 用途 |
 |------|------|
-| **智能对话** | 流式输出 + Markdown 渲染 + 自动重试（3次） |
-| **代码搜索** | 正则 grep 全项目，支持 `--glob '*.py'` 文件过滤 |
-| **批量重构** | 跨文件查找替换，默认 dry-run 预览，确认后执行 |
-| **结构扫描** | 识别类、函数、导入、TODO/FIXME（Python 深度支持） |
-| **测试运行** | 自动检测 pytest/unittest，只展示失败用例 |
-| **错误诊断** | 执行命令 → 捕获错误 + 上下文 → 喂给 AI 分析 |
-| **Git 集成** | status / diff / log / branch / diff-review（全只读） |
-| **包管理** | pip install / uninstall / list / outdated / freeze |
-| **文件操作** | 带行号读文件、分段读取、写文件、追加 |
-| **上下文管理** | 自动修剪（超 30 条触发 summary）、手动 summary/clear |
-| **长期记忆** | MEMORY.md 持久化存储 |
-| **对话导出** | `export` 命令保存当前对话为 Markdown |
-| **安全保护** | 危险命令拦截（rm -rf /、git push --force 等），`!!` 强制执行 |
-| **远程交互** | 飞书 + Telegram 收发消息 |
-| **美观终端** | Rich 流式输出 + 彩色 Markdown |
+| `code_search` | 正则搜索代码，支持 `--glob '*.py'` 文件过滤 |
+| `code_scan` | 扫描类/函数/导入/TODO/FIXME（Python 深度支持） |
+| `file_read` | 带行号读文件，`--start` `--lines` 分段读取 |
+| `write_file` | 写入/创建文件，`--append` 追加模式 |
+| `find_replace` | 跨文件批量替换，默认 dry-run 预览 |
+| `edit` | 打开系统默认编辑器 |
+| `git_ops` | status / diff / log / branch（全只读） |
+| `diff_review` | diff 摘要 + 文件级统计 |
+| `run_test` | 运行 pytest/unittest，只展示失败用例 |
+| `diagnose` | 执行命令 + 失败时捕获上下文供 AI 分析 |
+| `pip_ops` | pip install / uninstall / list / outdated |
+| `web` | DuckDuckGo 即时搜索 |
+
+**远程交互**
+- 飞书 + Telegram 收发消息
+- 支持远程执行命令和 AI 对话
+
+**安全保护**
+- 危险命令拦截（rm -rf /、git push --force 等）
+- `!!` 强制执行（跳过安全检查）
 
 ## 安装
 
@@ -104,7 +117,7 @@ AI 在需要时自动通过 `command:` 标签调用这些技能：
 
 ### 示例
 
-**代码搜索 + 分析 + 修改的完整工作流：**
+**代码搜索 + 分析 + 修改：**
 ```
 >> 帮我把所有 get_context 重命名为 load_context
 
@@ -127,7 +140,7 @@ AI 在需要时自动通过 `command:` 标签调用这些技能：
   [pytest] All tests passed!
 ```
 
-**错误诊断：**
+**错误诊断 + 修复：**
 ```
 >> 我运行报错了帮我看看
 
@@ -143,6 +156,23 @@ AI 在需要时自动通过 `command:` 标签调用这些技能：
   Successfully installed requests-2.32.0
 ```
 
+**代码结构分析：**
+```
+>> 分析一下这个项目的代码结构
+
+  command python skill/code_scan.py --glob '*.py'
+  [Scanning] 15 files...
+
+  lib/core.py:
+    Classes: Core
+    Imports: json, os, openai, rich
+    Functions: get_chat_response, summarize_context, execute_command
+
+  lib/database.py:
+    Classes: Database
+    Functions: add_message, get_context, clear_context
+```
+
 **Git 审查：**
 ```
 >> 看一下我改了啥
@@ -154,9 +184,9 @@ AI 在需要时自动通过 `command:` 标签调用这些技能：
   2 files changed, 10 insertions(+), 7 deletions(-)
 ```
 
-**飞书远程控制：**
+**飞书/Telegram 远程控制：**
 ```
-（在飞书群发送）
+（在飞书群或 Telegram 发送）
   command: python skill/git_ops.py status
   ai: 解释一下这个项目的架构
 
