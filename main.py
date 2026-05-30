@@ -1,67 +1,81 @@
 import json
 import os
+import sys
 import threading
 import time
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.live import Live
+from rich.spinner import Spinner
 from lib.core import Core
 from integration.feishu import Feishu
 from integration.telegram import Telegram
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "memory"))
+from save_chat import save_conversation
+
 
 class Main:
     def __init__(self):
         self.console = Console()
         self.core = Core()
-        
-        # 加载配置
+
         with open('config.json', 'r', encoding='utf-8') as f:
             config = json.load(f)
-        
-        # 初始化集成
+
         self.feishu = None
-        if config['feishu']['app_id'] and config['feishu']['app_secret']:
-            self.feishu = Feishu(config['feishu']['app_id'], config['feishu']['app_secret'])
-        
+        feishu_config = config.get('feishu', {})
+        if feishu_config.get('app_id') and feishu_config.get('app_secret'):
+            if not feishu_config['app_id'].startswith('your_'):
+                self.feishu = Feishu(feishu_config['app_id'], feishu_config['app_secret'])
+
         self.telegram = None
-        if config['telegram']['bot_token'] and config['telegram']['chat_id']:
-            self.telegram = Telegram(config['telegram']['bot_token'], config['telegram']['chat_id'])
-        
+        telegram_config = config.get('telegram', {})
+        if telegram_config.get('bot_token') and telegram_config.get('chat_id'):
+            if not telegram_config['bot_token'].startswith('your_'):
+                self.telegram = Telegram(telegram_config['bot_token'], telegram_config['chat_id'])
+
         self.running = True
-        
-        # 启动消息检查线程
+
         self.message_thread = threading.Thread(target=self.check_messages, daemon=True)
         self.message_thread.start()
-        
+
         self._show_welcome()
-    
+
     def _show_welcome(self):
         welcome_art = """
-   _____ _           _        _ _           _   _              
-  / ____| |         | |      | | |         | | (_)             
- | |    | |__   ___ | |_ __ _| | | ___  ___| |_ _  ___  _ __  
- | |    | '_ \ / _ \| __/ _` | | |/ _ \/ __| __| |/ _ \| '_ \ 
- | |____| | | | (_) | || (_| | | |  __/\__ \ |_| | (_) | | | |
-  \_____|_| |_|\___/ \__\__,_|_|_|\___||___/\__|_|\___/|_| |_|
-                                                              
-                                                              
+   _____ _           _        _ _           _   _
+  / ____| |         | |      | | |         | | (_)
+ | |    | |__   ___ | |_ __ _| | | ___  ___| |_ _  ___  _ __
+ | |    | '_ \\ / _ \\| __/ _` | | |/ _ \\/ __| __| |/ _ \\| '_ \\
+ | |____| | | | (_) | || (_| | | |  __/\\__ \\ |_| | (_) | | | |
+  \\_____|_| |_|\\___/ \\__\\__,_|_|_|\\___||___/\\__|_|\\___/|_| |_|
+
+
 """
         self.console.print(welcome_art, style="cyan")
-        self.console.print("欢迎使用 Zora AI 助手！\n", style="green")
-        self.console.print("可用命令:")
-        self.console.print("  summary - 压缩当前上下文")
-        self.console.print("  clear - 清空所有上下文历史")
-        self.console.print("  command <命令> - 执行Shell命令")
-        self.console.print("  feishu <消息> - 发送消息到飞书")
-        self.console.print("  telegram <消息> - 发送消息到Telegram")
-        self.console.print("  exit - 退出程序\n")
-    
+        self.console.print("Zora AI  — 终端编程助手\n", style="green bold")
+        self.console.print("内置命令:")
+        self.console.print("  summary    压缩上下文    clear     清空历史")
+        self.console.print("  export     导出对话      exit      退出")
+        self.console.print("  command    Shell命令     !!        强制执行(跳过安全检查)")
+        self.console.print("  feishu     飞书消息      telegram  Telegram消息")
+        self.console.print("")
+        self.console.print("编程技能 (AI 自动调用):", style="dim")
+        self.console.print("  code_search  find_replace  code_scan  file_read  write_file", style="dim")
+        self.console.print("  git_ops      diff_review   run_test   diagnose   pip_ops", style="dim")
+        self.console.print("")
+
+    def _spin(self, message: str):
+        """Show a spinner while AI is thinking."""
+        return self.console.status(f"[bold green]{message}[/bold green]", spinner="dots")
+
     def check_messages(self):
         while self.running:
-            # 检查飞书消息
             if self.feishu:
                 try:
-                    chat_id = self.core.config['feishu'].get('chat_id', '')
-                    if chat_id:
+                    chat_id = self.core.config.get('feishu', {}).get('chat_id', '')
+                    if chat_id and not chat_id.startswith('your_'):
                         messages = self.feishu.get_messages(chat_id, limit=5)
                         if isinstance(messages, list):
                             for msg in messages:
@@ -71,22 +85,20 @@ class Main:
                                     text = content_json.get('text', '').strip()
                                     if text.startswith('command:'):
                                         command = text[8:].strip()
-                                        self.console.print(f"从飞书收到命令: {command}", style="cyan")
+                                        self.console.print(f"[feishu] 命令: {command}", style="cyan")
                                         result = self.core.execute_command(command)
-                                        self.console.print(f"命令执行结果: {result}", style="blue")
-                                        self.feishu.send_message(chat_id, f"命令执行结果:\n{result}")
+                                        self.console.print(result, style="blue")
+                                        self.feishu.send_message(chat_id, f"result:\n{result}")
                                     elif text.startswith('ai:'):
                                         question = text[3:].strip()
-                                        self.console.print(f"从飞书收到AI问题: {question}", style="cyan")
+                                        self.console.print(f"[feishu] AI: {question}", style="cyan")
                                         response = self.core.get_chat_response(question)
-                                        self.console.print(f"AI回答: {response}", style="green")
-                                        self.feishu.send_message(chat_id, f"AI回答:\n{response}")
+                                        self.feishu.send_message(chat_id, f"{response}")
                                 except json.JSONDecodeError:
                                     pass
                 except Exception as e:
-                    self.console.print(f"检查飞书消息时出错: {str(e)}", style="red")
-            
-            # 检查Telegram消息
+                    self.console.print(f"[feishu] error: {e}", style="red")
+
             if self.telegram:
                 try:
                     updates = self.telegram.get_messages()
@@ -97,74 +109,101 @@ class Main:
                             chat_id = message.get('chat', {}).get('id', self.telegram.chat_id)
                             if text.startswith('command:'):
                                 command = text[8:].strip()
-                                self.console.print(f"从Telegram收到命令: {command}", style="cyan")
+                                self.console.print(f"[tg] 命令: {command}", style="cyan")
                                 result = self.core.execute_command(command)
-                                self.console.print(f"命令执行结果: {result}", style="blue")
-                                self.telegram.send_message(f"命令执行结果:\n{result}")
+                                self.console.print(result, style="blue")
+                                self.telegram.send_message(f"result:\n{result}")
                             elif text.startswith('ai:'):
                                 question = text[3:].strip()
-                                self.console.print(f"从Telegram收到AI问题: {question}", style="cyan")
+                                self.console.print(f"[tg] AI: {question}", style="cyan")
                                 response = self.core.get_chat_response(question)
-                                self.console.print(f"AI回答: {response}", style="green")
-                                self.telegram.send_message(f"AI回答:\n{response}")
+                                self.telegram.send_message(f"{response}")
                 except Exception as e:
-                    self.console.print(f"检查Telegram消息时出错: {str(e)}", style="red")
-            
-            # 等待一段时间后再次检查
+                    self.console.print(f"[tg] error: {e}", style="red")
+
             time.sleep(5)
-    
+
     def run(self):
         while True:
             try:
                 user_input = input(">> ").strip()
                 if not user_input:
                     continue
-                
+
                 if user_input == "exit":
                     self.running = False
-                    self.console.print("再见！", style="green")
+                    self.console.print("Bye!", style="green")
                     break
+
                 elif user_input == "summary":
                     result = self.core.summarize_context()
                     self.console.print(result, style="yellow")
+
                 elif user_input == "clear":
                     result = self.core.clear_context()
                     self.console.print(result, style="yellow")
+
+                elif user_input == "export":
+                    result = self.core.export_conversation()
+                    self.console.print(result, style="green")
+
+                elif user_input.startswith("!! "):
+                    # Force execute — bypass safety check
+                    command = user_input[3:]
+                    result = self.core.force_execute(command)
+                    self.console.print(result, style="yellow")
+
                 elif user_input.startswith("command "):
                     command = user_input[8:]
                     result = self.core.execute_command(command)
                     self.console.print(result, style="blue")
+
                 elif user_input.startswith("feishu "):
                     if self.feishu:
                         message = user_input[7:]
-                        result = self.feishu.send_message(self.core.config['feishu'].get('chat_id', ''), message)
+                        result = self.feishu.send_message(
+                            self.core.config['feishu'].get('chat_id', ''), message)
                         self.console.print(result, style="blue")
                     else:
-                        self.console.print("飞书未配置", style="red")
+                        self.console.print("feishu not configured", style="red")
+
                 elif user_input.startswith("telegram "):
                     if self.telegram:
                         message = user_input[9:]
                         result = self.telegram.send_message(message)
                         self.console.print(result, style="blue")
                     else:
-                        self.console.print("Telegram未配置", style="red")
+                        self.console.print("telegram not configured", style="red")
+
                 else:
-                    # 处理AI对话
+                    # AI chat — response is streamed in real-time by core
                     response = self.core.get_chat_response(user_input)
-                    # 检查是否包含command:标签
+
+                    # Auto-save conversation to memory
+                    try:
+                        save_conversation(user_input, response)
+                    except Exception:
+                        pass
+
                     if "command:" in response:
                         command = response.split("command:")[-1].strip()
-                        result = self.core.execute_command(command)
-                        self.console.print(Markdown(response), style="green")
-                        self.console.print(result, style="blue")
+                    elif "\ncommand " in response:
+                        command = response.split("\ncommand ")[-1].strip()
+                    elif response.startswith("command "):
+                        command = response[8:].strip()
                     else:
-                        self.console.print(Markdown(response), style="green")
+                        command = ""
+                    if command:
+                        result = self.core.execute_command(command)
+                        self.console.print(f"\n{result}", style="blue")
+
             except KeyboardInterrupt:
                 self.running = False
-                self.console.print("\n再见！", style="green")
+                self.console.print("\nBye!", style="green")
                 break
             except Exception as e:
-                self.console.print(f"错误: {str(e)}", style="red")
+                self.console.print(f"Error: {e}", style="red")
+
 
 if __name__ == "__main__":
     app = Main()

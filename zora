@@ -1,0 +1,11 @@
+#!/bin/bash
+# Zora AI Assistant Launcher for Git Bash/Unix
+
+ZORA_HOME="/d/zora"
+cd "$ZORA_HOME" || exit 1
+
+# Activate virtual environment
+source .venv/Scripts/activate
+
+# Run main.py with all arguments
+python main.py "$@"
