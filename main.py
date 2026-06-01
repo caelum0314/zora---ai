@@ -1,3 +1,5 @@
+"""Zora AI 主入口模块，提供 CLI 交互循环，处理用户命令和 AI 对话。"""
+
 import json
 import os
 import sys
@@ -16,6 +18,8 @@ from save_chat import save_conversation
 
 
 class Main:
+    """主控制器，管理 CLI 交互循环、飞书/Telegram 消息轮询和 AI 对话。"""
+
     def __init__(self):
         self.console = Console()
         self.core = Core()
@@ -23,12 +27,14 @@ class Main:
         with open('config.json', 'r', encoding='utf-8') as f:
             config = json.load(f)
 
+        # 初始化飞书集成（仅当配置了有效的 app_id 时）
         self.feishu = None
         feishu_config = config.get('feishu', {})
         if feishu_config.get('app_id') and feishu_config.get('app_secret'):
             if not feishu_config['app_id'].startswith('your_'):
                 self.feishu = Feishu(feishu_config['app_id'], feishu_config['app_secret'])
 
+        # 初始化 Telegram 集成（仅当配置了有效的 bot_token 时）
         self.telegram = None
         telegram_config = config.get('telegram', {})
         if telegram_config.get('bot_token') and telegram_config.get('chat_id'):
@@ -37,12 +43,14 @@ class Main:
 
         self.running = True
 
+        # 启动后台线程，轮询飞书和 Telegram 的新消息
         self.message_thread = threading.Thread(target=self.check_messages, daemon=True)
         self.message_thread.start()
 
         self._show_welcome()
 
     def _show_welcome(self):
+        """显示欢迎界面、内置命令和可用技能的帮助信息。"""
         welcome_art = """
    _____ _           _        _ _           _   _
   / ____| |         | |      | | |         | | (_)
@@ -67,10 +75,12 @@ class Main:
         self.console.print("")
 
     def _spin(self, message: str):
-        """Show a spinner while AI is thinking."""
+        """显示加载动画，提示 AI 正在思考中。"""
         return self.console.status(f"[bold green]{message}[/bold green]", spinner="dots")
 
     def check_messages(self):
+        """后台线程：每隔 5 秒轮询飞书和 Telegram 的新消息。
+        支持 command: 前缀（执行命令）和 ai: 前缀（AI 对话）。"""
         while self.running:
             if self.feishu:
                 try:
@@ -124,6 +134,7 @@ class Main:
             time.sleep(5)
 
     def run(self):
+        """CLI 主循环，处理用户输入的各种命令。"""
         while True:
             try:
                 user_input = input(">> ").strip()
@@ -135,6 +146,7 @@ class Main:
                     self.console.print("Bye!", style="green")
                     break
 
+                # 压缩对话上下文，减少 token 消耗
                 elif user_input == "summary":
                     result = self.core.summarize_context()
                     self.console.print(result, style="yellow")
@@ -147,17 +159,19 @@ class Main:
                     result = self.core.export_conversation()
                     self.console.print(result, style="green")
 
+                # !! 前缀：强制执行命令，跳过安全检查
                 elif user_input.startswith("!! "):
-                    # Force execute — bypass safety check
                     command = user_input[3:]
                     result = self.core.force_execute(command)
                     self.console.print(result, style="yellow")
 
+                # command 前缀：安全执行 Shell 命令
                 elif user_input.startswith("command "):
                     command = user_input[8:]
                     result = self.core.execute_command(command)
                     self.console.print(result, style="blue")
 
+                # 通过飞书发送消息
                 elif user_input.startswith("feishu "):
                     if self.feishu:
                         message = user_input[7:]
@@ -167,6 +181,7 @@ class Main:
                     else:
                         self.console.print("feishu not configured", style="red")
 
+                # 通过 Telegram 发送消息
                 elif user_input.startswith("telegram "):
                     if self.telegram:
                         message = user_input[9:]
@@ -176,15 +191,16 @@ class Main:
                         self.console.print("telegram not configured", style="red")
 
                 else:
-                    # AI chat — response is streamed in real-time by core
+                    # AI 对话：响应由 core 实时流式输出
                     response = self.core.get_chat_response(user_input)
 
-                    # Auto-save conversation to memory
+                    # 自动保存对话记录到本地
                     try:
                         save_conversation(user_input, response)
                     except Exception:
                         pass
 
+                    # 检查 AI 响应中是否包含需要执行的命令
                     if "command:" in response:
                         command = response.split("command:")[-1].strip()
                     elif "\ncommand " in response:
@@ -202,6 +218,7 @@ class Main:
                 self.console.print("\nBye!", style="green")
                 break
             except Exception as e:
+                # 捕获其他异常，保持程序继续运行
                 self.console.print(f"Error: {e}", style="red")
 
 

@@ -1,9 +1,10 @@
-"""Safe git operations — status, diff, log, branch list. Read-only, no destructive ops."""
+"""安全的 Git 操作工具 —— 提供 status、diff、log、branch 等只读操作，不执行任何破坏性命令。"""
 import subprocess
 import sys
 
 
 def run(cmd: str) -> str:
+    """执行 shell 命令并安全返回输出，带 30 秒超时保护。"""
     try:
         r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
         return r.stdout or r.stderr or "(no output)"
@@ -18,6 +19,7 @@ def git_status() -> str:
 
 
 def git_diff(staged: bool = False) -> str:
+    """显示未暂存或已暂存的变更，超过 200 行自动截断。"""
     cmd = "git diff"
     if staged:
         cmd += " --staged"
@@ -41,6 +43,7 @@ def git_show_head() -> str:
 
 
 if __name__ == "__main__":
+    # 命令行入口，根据第一个参数分发到对应操作
     if len(sys.argv) < 2:
         print("Usage: python skill/git_ops.py <operation> [args]")
         print("Operations:")

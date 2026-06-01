@@ -1,3 +1,12 @@
+"""
+核心模块 — 负责 AI 对话、命令执行、上下文管理和技能发现。
+
+Core 类是 Zora 的中枢控制器，协调以下子系统：
+- OpenAI 客户端：处理与 LLM 的流式对话
+- Database：管理对话上下文和长期记忆
+- Terminal：安全执行 shell 命令
+- 技能发现：扫描 skill/ 目录并生成可用技能目录
+"""
 import json
 import os
 import subprocess
@@ -9,10 +18,13 @@ from lib.terminal import Terminal
 
 
 class Core:
+    """Zora 核心控制器，管理 AI 对话生命周期、命令执行与技能调用。"""
+
     def __init__(self, config_file="config.json"):
         with open(config_file, 'r', encoding='utf-8') as f:
             self.config = json.load(f)
 
+        # 初始化 OpenAI 兼容客户端
         self.client = OpenAI(
             api_key=self.config['openai']['api_key'],
             base_url=self.config['openai']['base_url']
@@ -23,12 +35,12 @@ class Core:
         self.context_limit = self.config.get("context_limit", 30)
 
     def discover_skills(self) -> str:
-        """Scan skill/ directory and build a catalog string for the system prompt."""
+        """扫描 skill/ 目录，构建技能目录字符串，用于注入系统提示词。"""
         skill_dir = "skill"
         if not os.path.isdir(skill_dir):
             return ""
 
-        # Static skill catalog to avoid subprocess issues on Windows
+        # 静态技能目录，避免 Windows 下子进程调用问题
         static_catalog = {
             "code_scan.py": "扫描源代码结构 — 类、函数、导入、TODO",
             "code_search.py": "正则搜索代码内容",
@@ -53,10 +65,12 @@ class Core:
         return "\n".join(catalog) if catalog else ""
 
     def _build_messages(self, user_input: str) -> list:
+        """构建发送给 LLM 的完整消息列表，包含系统提示词、记忆、上下文和技能目录。"""
         context = self.database.get_context()
         memory = self.database.get_memory()
         skills_catalog = self.discover_skills()
 
+        # 组装技能提示块
         skill_block = ""
         if skills_catalog:
             skill_block = (
@@ -78,15 +92,16 @@ class Core:
         return messages
 
     def get_chat_response(self, user_input: str) -> str:
-        """Get AI response with streaming (printed in real-time), retry, and auto-trim."""
+        """获取 AI 流式响应（实时打印），支持自动重试和上下文自动裁剪。"""
         messages = self._build_messages(user_input)
 
-        # Auto-trim context before sending if too large
+        # 发送前自动裁剪过长上下文
         self._auto_trim()
 
         response_text = ""
         last_error = None
 
+        # 最多重试 3 次，带退避等待
         for attempt in range(3):
             try:
                 stream = self.client.chat.completions.create(
@@ -102,7 +117,7 @@ class Core:
                         print(token, end="", flush=True)
                         response_text += token
 
-                print()  # newline after streaming
+                print()  # 流式输出结束后换行
                 break
 
             except Exception as e:
@@ -119,16 +134,17 @@ class Core:
         if not response_text:
             return "Error: empty response from API"
 
+        # 将本轮对话存入上下文
         self.database.add_to_context("user", user_input)
         self.database.add_to_context("assistant", response_text)
 
         return response_text
 
     def _auto_trim(self):
-        """If context is too long, automatically summarize old entries."""
+        """上下文过长时自动压缩：将前半部分摘要化，保留后半部分。"""
         context = self.database.get_context()
         if len(context) > self.context_limit:
-            # Summarize oldest half
+            # 取前半部分做摘要
             cutoff = len(context) // 2
             old = context[:cutoff]
             new = context[cutoff:]
@@ -151,7 +167,7 @@ class Core:
                 pass
 
     def execute_command(self, command: str) -> str:
-        # Safety check
+        # 安全检查：拦截危险命令
         if self.terminal.is_dangerous(command):
             return (
                 f"  Dangerous command blocked: '{command}'\n"
@@ -161,10 +177,11 @@ class Core:
         return self.terminal.execute(command)
 
     def force_execute(self, command: str) -> str:
-        """Execute a command that was blocked by the safety filter."""
+        """强制执行被安全检查拦截的命令（用户明确确认后调用）。"""
         return self.terminal.execute(command)
 
     def summarize_context(self):
+        """手动触发上下文摘要：将当前对话压缩为一段摘要并替换上下文。"""
         context = self.database.get_context()
         if not context:
             return "No context to summarize."
@@ -184,12 +201,15 @@ class Core:
         return summary
 
     def clear_context(self):
+        """清空当前对话上下文。"""
         self.database.clear_context()
         return "Context cleared."
 
     def add_to_memory(self, content):
+        """将内容追加到长期记忆文件。"""
         self.database.add_to_memory(content)
         return "Added to memory."
 
     def export_conversation(self) -> str:
+        """将当前对话导出为 Markdown 文件。"""
         return self.database.export_markdown()

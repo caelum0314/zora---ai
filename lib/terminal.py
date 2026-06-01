@@ -1,9 +1,19 @@
+"""
+终端模块 — 安全执行 shell 命令，包含危险命令拦截。
+
+提供两种执行模式：
+- execute()：通过 shell=True 执行，支持管道和重定向，执行前做安全检查
+- execute_safe()：通过参数列表执行（shell=False），适用于动态参数场景
+"""
 import subprocess
 import os
 import shlex
 
 
 class Terminal:
+    """安全的命令执行器，内置危险模式匹配和超时控制。"""
+
+    # 危险命令特征列表，匹配时拦截执行
     DANGEROUS_PATTERNS = [
         "rm -rf /", "rm -rf ~", "rm -rf .",
         "git push --force", "git push -f",
@@ -19,6 +29,7 @@ class Terminal:
     ]
 
     def is_dangerous(self, command: str) -> bool:
+        """检查命令是否匹配危险模式列表（忽略引号，大小写不敏感）。"""
         cmd_lower = command.lower().replace("'", "").replace('"', '')
         for pattern in self.DANGEROUS_PATTERNS:
             if pattern.lower() in cmd_lower:
@@ -27,9 +38,8 @@ class Terminal:
 
     def execute(self, command: str) -> str:
         """
-        Execute a shell command safely.
-        Uses shell=True for compatibility with pipes/redirects,
-        but with danger checks applied before execution.
+        安全执行 shell 命令。
+        使用 shell=True 以支持管道和重定向，执行前需通过危险命令检查。
         """
         try:
             result = subprocess.run(
@@ -44,6 +54,7 @@ class Terminal:
             error = result.stderr
             return_code = result.returncode
 
+            # 成功时合并 stdout 和 stderr；失败时优先显示 stderr
             if return_code == 0:
                 if not output and not error:
                     return "Command executed successfully (no output)."
@@ -63,8 +74,8 @@ class Terminal:
 
     def execute_safe(self, args: list) -> str:
         """
-        Execute a command without shell=True — safer for dynamic arguments.
-        Args should be a list, e.g. ['python', 'skill/code_search.py', 'pattern']
+        不使用 shell=True 执行命令 — 对动态参数更安全。
+        args 应为列表，例如 ['python', 'skill/code_search.py', 'pattern']
         """
         try:
             result = subprocess.run(

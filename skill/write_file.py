@@ -1,10 +1,10 @@
-"""Write or create a file — let AI generate and save code."""
+"""文件写入工具 —— 支持创建新文件或在已有文件末尾追加内容，自动创建不存在的父目录。"""
 import sys
 import os
 
 
 if __name__ == "__main__":
-    # Support both positional and --path/--content/--append flags
+    # 同时支持位置参数和 --path/--content/--append 标记两种传参方式
     args = sys.argv[1:]
     filepath = None
     content = None
@@ -52,6 +52,7 @@ if __name__ == "__main__":
         with open(from_temp, "r", encoding="utf-8") as f:
             content = f.read()
 
+    # 自动创建目标路径中不存在的父目录
     dirpath = os.path.dirname(filepath)
     if dirpath and not os.path.exists(dirpath):
         os.makedirs(dirpath, exist_ok=True)

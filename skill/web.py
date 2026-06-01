@@ -1,3 +1,4 @@
+"""网页搜索工具 —— 通过 DuckDuckGo 免费 API 执行关键词搜索，返回摘要及相关主题。"""
 import sys
 import requests
 
@@ -9,7 +10,7 @@ if __name__ == "__main__":
     query = " ".join(sys.argv[1:])
     print(f"Searching for: {query}")
     
-    # 使用DuckDuckGo API进行搜索
+    # 使用 DuckDuckGo API 进行搜索，禁止 HTML 和重定向
     url = "https://api.duckduckgo.com/"
     params = {
         "q": query,

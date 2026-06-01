@@ -1,4 +1,4 @@
-"""Multi-file find and replace — refactoring helper."""
+"""多文件查找替换工具 —— 支持 dry-run 模式预览变更，确认后才实际写入的重构辅助脚本。"""
 import sys
 import os
 import re
@@ -7,6 +7,8 @@ import fnmatch
 
 def find_replace(root: str, pattern: str, replacement: str, glob: str = None,
                  dry_run: bool = True, max_files: int = 100) -> list:
+    """在指定目录下递归查找并替换文本内容。"""
+    # 跳过常见的非源码目录，避免误操作
     ignore = [".git", "__pycache__", "node_modules", ".venv", "venv",
               ".idea", ".vscode", "dist", "build", ".cache", "__pycache__"]
     results = []
@@ -25,6 +27,7 @@ def find_replace(root: str, pattern: str, replacement: str, glob: str = None,
                 new_content, count = re.subn(pattern, replacement, content)
                 if count > 0:
                     results.append((fpath, count))
+                    # 仅在非 dry-run 模式下才实际写入文件
                     if not dry_run:
                         with open(fpath, "w", encoding="utf-8") as f:
                             f.write(new_content)
@@ -37,6 +40,7 @@ def find_replace(root: str, pattern: str, replacement: str, glob: str = None,
 
 
 if __name__ == "__main__":
+    # 解析命令行参数
     if len(sys.argv) < 3:
         print("Usage: python skill/find_replace.py <pattern> <replacement> [options]")
         print()

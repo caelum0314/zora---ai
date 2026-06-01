@@ -1,10 +1,11 @@
-"""Scan a source file and report its structure — functions, classes, imports, TODOs."""
+"""扫描源码文件并报告其结构 — 函数、类、导入、TODO 标记。"""
 import sys
 import os
 import re
 
 
 def scan_python(filepath: str) -> str:
+    """扫描 Python 文件，提取函数、类、导入和 TODO 标记。"""
     with open(filepath, "r", encoding="utf-8", errors="replace") as f:
         lines = f.readlines()
 
@@ -14,6 +15,7 @@ def scan_python(filepath: str) -> str:
     todos = []
     decorators = []
 
+    # 预编译正则表达式以提高性能
     func_re = re.compile(r"^\s*(?:async\s+)?def\s+(\w+)")
     class_re = re.compile(r"^\s*class\s+(\w+)")
     import_re = re.compile(r"^\s*(?:import\s+|from\s+\S+\s+import\s+)")
@@ -59,7 +61,7 @@ def scan_python(filepath: str) -> str:
 
 
 def scan_generic(filepath: str) -> str:
-    """Fallback scan for non-Python files."""
+    """非 Python 文件的通用扫描回退方案。"""
     with open(filepath, "r", encoding="utf-8", errors="replace") as f:
         lines = f.readlines()
 
@@ -82,6 +84,7 @@ def scan_generic(filepath: str) -> str:
     return "\n".join(out)
 
 
+# 根据文件扩展名分派到对应的扫描函数
 LANGS = {
     ".py": scan_python,
     ".js": scan_generic,
@@ -106,7 +109,7 @@ LANGS = {
 
 
 if __name__ == "__main__":
-    # Support both --path flag and positional arg
+    # 支持 --path 标志和位置参数两种传参方式
     args = sys.argv[1:]
     filepath = None
     i = 0

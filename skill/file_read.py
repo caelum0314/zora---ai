@@ -1,12 +1,14 @@
-"""Read file contents with line numbers — for code review and context."""
+"""读取文件内容并附带行号显示 — 用于代码审查和上下文查看。"""
 import sys
 import os
 
 
 def read_file(filepath: str, start: int = 1, count: int = None) -> str:
+    """读取文件内容，支持分页和行号显示。目录路径则列出目录内容。"""
     if not os.path.exists(filepath):
         return f"Error: File not found: {filepath}"
 
+    # 如果是目录，列出其内容
     if os.path.isdir(filepath):
         items = os.listdir(filepath)
         lines = [f"Directory: {filepath}", ""]
@@ -16,6 +18,7 @@ def read_file(filepath: str, start: int = 1, count: int = None) -> str:
             lines.append(f"  {item}{tag}")
         return "\n".join(lines)
 
+    # 大文件拒绝直接读取，防止内存溢出
     if os.path.getsize(filepath) > 1_000_000:
         return f"Error: File too large ({os.path.getsize(filepath)} bytes). Use --start and --lines."
 
@@ -26,6 +29,7 @@ def read_file(filepath: str, start: int = 1, count: int = None) -> str:
     if count is not None:
         end = min(start + count - 1, end)
 
+    # 根据最大行号计算行号列宽度
     width = len(str(end))
     out = [f"File: {filepath}  ({len(all_lines)} lines)\n"]
     for i in range(start - 1, end):
@@ -38,6 +42,7 @@ def read_file(filepath: str, start: int = 1, count: int = None) -> str:
 
 
 if __name__ == "__main__":
+    # 解析命令行参数：支持 --path、--start、--lines 和位置参数
     if len(sys.argv) < 2:
         print("Usage: python skill/file_read.py <file_path> [--start <line>] [--lines <n>]")
         print("Examples:")
@@ -45,7 +50,7 @@ if __name__ == "__main__":
         print("  python skill/file_read.py main.py --start 50 --lines 30")
         sys.exit(1)
 
-    # Support both --path flag and positional arg
+    # 支持 --path 标志和位置参数两种传参方式
     args = sys.argv[1:]
     filepath = None
     start = 1

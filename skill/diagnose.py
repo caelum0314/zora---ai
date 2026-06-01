@@ -1,10 +1,11 @@
-"""Execute a command and diagnose failures — error → context → AI analysis loop."""
+"""执行命令并诊断失败原因 — 错误 → 上下文 → AI 分析闭环。"""
 import sys
 import subprocess
 import os
 
 
 def run_command(cmd: str, timeout: int = 60) -> dict:
+    """在子进程中执行 shell 命令，捕获标准输出、标准错误和返回码。"""
     try:
         r = subprocess.run(cmd, shell=True, capture_output=True, text=True,
                           timeout=timeout, cwd=cwd)
@@ -21,6 +22,7 @@ def run_command(cmd: str, timeout: int = 60) -> dict:
 
 
 if __name__ == "__main__":
+    # 解析命令行参数：支持 --cmd、--cwd、--timeout、--command 和位置参数
     if len(sys.argv) < 2:
         print("Usage: python skill/diagnose.py <command> [--timeout <seconds>]")
         print()
@@ -67,6 +69,7 @@ if __name__ == "__main__":
         if result["stdout"]:
             output = result["stdout"]
             lines = output.split("\n")
+            # 输出过长时只显示头尾各 30 行，避免刷屏
             if len(lines) > 60:
                 print("\n".join(lines[:30]))
                 print(f"\n... ({len(lines) - 60} more lines)")
@@ -87,19 +90,19 @@ if __name__ == "__main__":
             else:
                 print(f"[stdout]\n{result['stdout']}")
 
-        # Extra context for the AI
+        # 为 AI 分析提供诊断上下文
         print(f"\n[Diagnosis context for AI analysis]")
         print(f"  Working directory: {os.getcwd()}")
         print(f"  Exit code: {result['returncode']}")
         print(f"  Command: {cmd}")
 
-        # Check if it's a Python traceback
+        # 检测是否为 Python 异常回溯，提取关键错误信息
         if "Traceback (most recent call last)" in result["stderr"]:
             trace_lines = result["stderr"].strip().split("\n")
             last = trace_lines[-1] if trace_lines else ""
             print(f"  Error type: Python traceback detected")
             print(f"  Final error: {last}")
-            # Find the file:line reference
+            # 定位 traceback 中的文件:行号引用
             for tl in trace_lines:
                 if 'File "' in tl:
                     print(f"  Source: {tl.strip()}")

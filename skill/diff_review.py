@@ -1,4 +1,4 @@
-"""Show git diff summary — files changed, insertions/deletions, key context."""
+"""显示 git diff 摘要 — 变更文件、增删行数、关键上下文。"""
 import sys
 import subprocess
 import os
@@ -6,6 +6,7 @@ import re
 
 
 def run(cmd: str) -> str:
+    """执行 git 命令并返回输出，出错时返回错误信息。"""
     try:
         r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
         return r.stdout or r.stderr or ""
@@ -14,10 +15,10 @@ def run(cmd: str) -> str:
 
 
 def diff_summary() -> str:
-    """Show a concise summary of all changes."""
+    """展示所有变更的简洁摘要，包括文件统计和每文件增删行数。"""
     out = []
 
-    # Overall stats
+    # 获取未暂存和已暂存变更的统计信息
     stat = run("git diff --stat")
     stat_staged = run("git diff --staged --stat")
 
@@ -33,7 +34,7 @@ def diff_summary() -> str:
     if not stat.strip() and not stat_staged.strip():
         return "No changes (working tree clean)."
 
-    # Per-file breakdown
+    # 按文件列出增删行数明细
     numstat = run("git diff --numstat")
     if numstat.strip():
         out.append("Per-file breakdown (+additions -deletions):")
@@ -65,11 +66,11 @@ def diff_summary() -> str:
 
 
 def diff_detail(filepath: str = None) -> str:
-    """Show the actual diff content."""
+    """展示实际的 diff 内容，可选按文件过滤。"""
     cmd = "git diff"
     if filepath:
         cmd += f' -- "{filepath}"'
-    # Also include staged
+    # 同时包含已暂存的变更
     cmd_staged = "git diff --staged"
     if filepath:
         cmd_staged += f' -- "{filepath}"'
@@ -90,12 +91,14 @@ def diff_detail(filepath: str = None) -> str:
 
     full = "\n".join(parts)
     lines = full.split("\n")
+    # 超过 300 行时截断，避免输出过大
     if len(lines) > 300:
         return "\n".join(lines[:300]) + f"\n\n... (truncated, {len(lines)} total lines)"
     return full
 
 
 if __name__ == "__main__":
+    # 根据子命令分发到不同操作：summary / detail / files
     if len(sys.argv) < 2:
         print("Usage: python skill/diff_review.py <operation> [args]")
         print()

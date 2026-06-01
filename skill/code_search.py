@@ -1,4 +1,4 @@
-"""Search codebase for patterns — like grep/ripgrep for your project."""
+"""在代码库中搜索正则模式 — 类似 grep/ripgrep 的项目搜索工具。"""
 import sys
 import os
 import re
@@ -7,6 +7,7 @@ from pathlib import Path
 
 
 def should_skip(path: str, ignore_patterns: list) -> bool:
+    """检查文件路径是否匹配任一忽略规则，匹配则跳过。"""
     for pat in ignore_patterns:
         if pat in path:
             return True
@@ -14,10 +15,13 @@ def should_skip(path: str, ignore_patterns: list) -> bool:
 
 
 def search_files(root: str, pattern: str, glob: str = None, max_results: int = 30):
+    """递归遍历目录树，搜索匹配正则模式的行。"""
+    # 需要忽略的目录和文件
     ignore = [".git", "__pycache__", "node_modules", ".venv", "venv", ".idea", ".vscode", "dist", "build", ".cache"]
     results = []
 
     for dirpath, dirnames, filenames in os.walk(root):
+        # 原地过滤掉需要忽略的目录，避免重复遍历
         dirnames[:] = [d for d in dirnames if d not in ignore]
         for fname in filenames:
             fpath = os.path.join(dirpath, fname)
@@ -40,6 +44,7 @@ def search_files(root: str, pattern: str, glob: str = None, max_results: int = 3
 
 
 if __name__ == "__main__":
+    # 解析命令行参数：模式、glob 过滤、搜索路径、最大结果数
     if len(sys.argv) < 2:
         print("Usage: python skill/code_search.py <regex_pattern> [--glob <*.py>] [--path <dir>] [--max <n>]")
         print("Examples:")
@@ -75,5 +80,6 @@ if __name__ == "__main__":
     else:
         print(f"Found {len(results)} matches:\n")
         for fpath, lineno, line in results:
+            # 输出相对路径和行号，便于定位
             rel = os.path.relpath(fpath)
             print(f"\033[36m{rel}:{lineno}\033[0m  {line}")

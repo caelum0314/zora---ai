@@ -1,3 +1,4 @@
+"""使用系统默认编辑器打开文件进行编辑。"""
 import sys
 import os
 
@@ -7,6 +8,7 @@ if __name__ == "__main__":
         sys.exit(1)
     
     file_path = sys.argv[1]
+    # 如果文件不存在，先创建一个空文件
     if not os.path.exists(file_path):
         with open(file_path, 'w') as f:
             pass

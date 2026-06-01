@@ -1,4 +1,4 @@
-"""Run tests and report failures with context — pytest / unittest support."""
+"""测试运行工具 —— 自动检测项目使用的测试框架（pytest/unittest），运行测试并提取失败用例的关键信息。"""
 import sys
 import subprocess
 import os
@@ -7,7 +7,7 @@ import json
 
 
 def find_test_framework():
-    """Detect which test framework is available."""
+    """检测当前项目可用的测试框架，优先返回 pytest。"""
     # Check for pytest config files
     for f in ["pytest.ini", "pyproject.toml", "setup.cfg", "tox.ini"]:
         if os.path.exists(f):
@@ -23,6 +23,7 @@ def find_test_framework():
 
 
 def run_pytest(args: list) -> dict:
+    """以 pytest 框架运行测试，使用 --tb=short 精简输出。"""
     cmd = [sys.executable, "-m", "pytest", "-v", "--tb=short", "--color=no"]
     if args:
         cmd.extend(args)
@@ -35,6 +36,7 @@ def run_pytest(args: list) -> dict:
 
 
 def run_unittest(args: list) -> dict:
+    """以 unittest discover 模式运行测试，将路径转换为模块名。"""
     cmd = [sys.executable, "-m", "unittest", "discover", "-v"]
     if args:
         target = args[0].replace("/", ".").replace("\\", ".").replace(".py", "")
@@ -46,7 +48,7 @@ def run_unittest(args: list) -> dict:
 
 
 def extract_failures(output: str):
-    """Extract failure/traceback lines for concise output."""
+    """从测试输出中提取 FAIL/ERROR/assert 相关的失败行，用于简洁展示。"""
     lines = output.split("\n")
     failures = []
     in_failure = False
@@ -77,7 +79,7 @@ if __name__ == "__main__":
     output = result["output"]
     stderr = result["stderr"]
 
-    # Always print full output
+    # 总是打印完整输出，超过 80 行则截取最后 80 行
     lines = output.split("\n")
     total = len(lines)
 

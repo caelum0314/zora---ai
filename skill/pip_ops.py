@@ -1,10 +1,11 @@
-"""Safe pip operations — install, uninstall, list, outdated, search."""
+"""安全的 pip 操作工具 —— 支持 install、uninstall、list、outdated、search 等包管理操作，通过子进程调用 pip 模块。"""
 import sys
 import subprocess
 import os
 
 
 def run_pip(args: list, timeout: int = 120) -> dict:
+    """使用当前 Python 解释器调用 pip 模块执行命令，返回结构化结果字典。"""
     cmd = [sys.executable, "-m", "pip"] + args
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
@@ -17,6 +18,7 @@ def run_pip(args: list, timeout: int = 120) -> dict:
 
 
 if __name__ == "__main__":
+    # 命令行入口，根据操作码分发
     if len(sys.argv) < 2:
         print("Usage: python skill/pip_ops.py <operation> [args]")
         print()
@@ -39,7 +41,7 @@ if __name__ == "__main__":
     rest = sys.argv[2:]
 
     if op == "list":
-        # Show user-installed packages (not dependencies)
+        # 仅列出用户安装的顶层包，非依赖
         result = run_pip(["list", "--format=columns"])
         if result["success"]:
             lines = result["output"].split("\n")
@@ -83,7 +85,7 @@ if __name__ == "__main__":
             sys.exit(1)
         query = " ".join(rest)
         print(f"Searching PyPI for: {query}")
-        # pip search was removed, use pip install --dry-run or suggest
+        # pip search 在新版本中已被移除，改用 pip index search
         result = run_pip(["index", "search", query] if sys.version_info >= (3, 8) else ["search", query], timeout=30)
         print(result["output"] or result["error"] or "Search completed (try: pip index search <query>)")
 
